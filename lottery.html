@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>佳冬鄉珍惜水資源宣導暨中秋晚會活動 — 抽獎查詢</title>
+  <style>
+    :root{--bg:#f3f7f7;--card:#ffffff;--accent:#0f766e;--muted:#6b7280}
+    body{font-family: system-ui, 'Noto Sans TC', 'Microsoft JhengHei', Arial; background:linear-gradient(180deg,#f0fff4 0%, #eef2ff 100%); margin:0; padding:24px; color:#073642}
+    .wrap{max-width:980px;margin:0 auto}
+    header{text-align:center;margin-bottom:18px}
+    h1{margin:0;color:var(--accent);font-size:22px}
+    h2{margin:6px 0 0;color:#024; font-size:14px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 24px rgba(2,6,23,0.06)}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    input[type="text"], select{padding:8px 10px;border-radius:8px;border:1px solid #e6eef0}
+    button{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.ghost{background:#f1f5f9;color:#111;border:1px solid #e2e8f0}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px solid #eef3f3;text-align:left;vertical-align:middle}
+    th{font-weight:600;color:var(--muted);background:#fbfdfc}
+    td[contenteditable]{background:#fffef7}
+    .actions{display:flex;gap:8px;align-items:center}
+    .muted{color:var(--muted);font-size:13px}
+    .right{display:flex;gap:8px;align-items:center;margin-left:auto}
+    .small{font-size:13px}
+    .delete-btn{background:#ef4444}
+    .mode-switch{margin-bottom:12px;text-align:right}
+    @media(max-width:640px){.controls{flex-direction:column;align-items:stretch}.right{margin-left:0;flex-wrap:wrap}.mode-switch{text-align:center}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>佳冬鄉珍惜水資源宣導暨中秋晚會活動</h1>
+      <h2>抽獎結果快速查詢（可切換觀看/編輯模式）</h2>
+    </header>
+
+    <div class="mode-switch">
+      <button id="toggleModeBtn" class="ghost">目前模式：觀看</button>
+    </div>
+
+    <section class="card">
+      <div class="controls">
+        <input id="search" type="text" placeholder="搜尋摸彩品 / 得獎人 / 備註，支援部分配對">
+        <div class="right edit-only">
+          <label style="display:flex;align-items:center;gap:8px">
+            <input id="csvFile" type="file" accept=".csv" style="display:none">
+            <button id="importBtn" class="ghost">匯入 CSV</button>
+          </label>
+          <button id="addBtn">新增一筆</button>
+          <button id="saveBtn">儲存到本機</button>
+          <button id="exportBtn">匯出 CSV</button>
+          <button id="clearStorage" class="ghost">清空本機資料</button>
+        </div>
+      </div>
+
+      <div class="muted small edit-only">提示：點兩下或選取表格欄位即可編輯。編輯完成後請按「儲存到本機」保存變更。</div>
+
+      <div style="overflow:auto;margin-top:12px">
+        <table id="table">
+          <thead>
+            <tr>
+              <th style="width:48px">#</th>
+              <th>摸彩品</th>
+              <th>得獎人</th>
+              <th>備註</th>
+              <th class="edit-only" style="width:120px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const DEFAULT = [
+      {prize:'50吋電視', winner:'王小明', note:'第四場抽出'},
+      {prize:'iPad Air', winner:'陳小華', note:'活動A'},
+      {prize:'購物金500元', winner:'李佳蓉', note:''},
+      {prize:'音響組', winner:'張大偉', note:'現場領取'}
+    ];
+
+    let data = [];
+    let editMode = false; // 預設觀看模式
+    const PASSWORD = "900226";
+
+    const tbody = document.getElementById('tbody');
+    const search = document.getElementById('search');
+    const addBtn = document.getElementById('addBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const importBtn = document.getElementById('importBtn');
+    const csvFile = document.getElementById('csvFile');
+    const clearStorage = document.getElementById('clearStorage');
+    const toggleModeBtn = document.getElementById('toggleModeBtn');
+
+    function loadFromStorage(){
+      try{
+        const raw = localStorage.getItem('lottery_data_v1');
+        if(raw){ data = JSON.parse(raw); } else { data = DEFAULT.slice(); }
+      }catch(e){ data = DEFAULT.slice(); }
+      render();
+    }
+
+    function saveToStorage(){
+      localStorage.setItem('lottery_data_v1', JSON.stringify(data));
+      alert('已儲存到本機（LocalStorage）');
+    }
+
+    function render(filter=''){
+      tbody.innerHTML = '';
+      const list = data.filter(r => {
+        const q = filter.trim().toLowerCase();
+        if(!q) return true;
+        return (r.prize||'').toLowerCase().includes(q) || (r.winner||'').toLowerCase().includes(q) || (r.note||'').toLowerCase().includes(q);
+      });
+      list.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${idx+1}</td>
+          <td ${editMode?'contenteditable="true" data-field="prize"':''}>${escapeHtml(r.prize)}</td>
+          <td ${editMode?'contenteditable="true" data-field="winner"':''}>${escapeHtml(r.winner)}</td>
+          <td ${editMode?'contenteditable="true" data-field="note"':''}>${escapeHtml(r.note)}</td>
+          ${editMode?`<td><button class="delete-btn" data-idx="${idx}">刪除</button></td>`:''}
+        `;
+        tbody.appendChild(tr);
+      });
+      attachEvents();
+      updateUIByMode();
+    }
+
+    function escapeHtml(s){ return (s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+    function attachEvents(){
+      if(!editMode) return;
+      tbody.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          const i = Number(e.currentTarget.dataset.idx);
+          if(confirm('確定要刪除此筆資料？')){
+            data.splice(i,1);
+            render(search.value);
+          }
+        };
+      });
+      tbody.querySelectorAll('td[contenteditable]').forEach(td => {
+        td.addEventListener('blur', rebuildDataFromTable);
+        td.addEventListener('keydown', (ev)=>{
+          if(ev.key === 'Enter'){ ev.preventDefault(); td.blur(); }
+        });
+      });
+    }
+
+    function rebuildDataFromTable(){
+      if(!editMode) return;
+      const rows = tbody.querySelectorAll('tr');
+      const newList = [];
+      rows.forEach(row => {
+        const cols = row.querySelectorAll('td');
+        const prize = cols[1].innerText.trim();
+        const winner = cols[2].innerText.trim();
+        const note = cols[3].innerText.trim();
+        if(prize||winner||note) newList.push({prize,winner,note});
+      });
+      data = newList;
+      render(search.value);
+    }
+
+    function updateUIByMode(){
+      document.querySelectorAll('.edit-only').forEach(el => {
+        el.style.display = editMode ? '' : 'none';
+      });
+      toggleModeBtn.textContent = editMode ? '目前模式：編輯' : '目前模式：觀看';
+    }
+
+    addBtn.addEventListener('click', ()=>{
+      data.push({prize:'', winner:'', note:''});
+      render(search.value);
+      setTimeout(()=>{
+        const last = tbody.querySelector('tr:last-child td[contenteditable]');
+        if(last){ last.focus(); }
+      },50);
+    });
+
+    exportBtn.addEventListener('click', ()=>{
+      let csv = '摸彩品,得獎人,備註\n';
+      data.forEach(r => {
+        const row = [r.prize||'', r.winner||'', r.note||''].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',');
+        csv += row + '\n';
+      });
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = '抽獎結果.csv'; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    saveBtn.addEventListener('click', saveToStorage);
+
+    importBtn.addEventListener('click', ()=> csvFile.click());
+    csvFile.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{
+          const text = reader.result;
+          const rows = text.split(/\r?\n/).filter(Boolean).map(r => parseCSVRow(r));
+          const header = rows[0] || [];
+          let start = 0;
+          if(header.some(h => /摸彩|prize|獎品|得獎|winner|姓名/i.test(h))){
+            start = 1;
+          }
+          const parsed = rows.slice(start).map(cols => {
+            return { prize: cols[0]||'', winner: cols[1]||'', note: cols[2]||'' };
+          });
+          data = parsed;
+          render(search.value);
+          alert('CSV 匯入完成，共 ' + data.length + ' 筆');
+        }catch(err){
+          alert('CSV 解析失敗：' + err.message);
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+      e.target.value = '';
+    });
+
+    function parseCSVRow(line){
+      const res = []; let cur = ''; let inQ = false;
+      for(let i=0;i<line.length;i++){
+        const ch = line[i];
+        if(ch === '"'){
+          if(inQ && line[i+1] === '"'){ cur += '"'; i++; continue; }
+          inQ = !inQ; continue;
+        }
+        if(ch === ',' && !inQ){ res.push(cur); cur=''; continue; }
+        cur += ch;
+      }
+      res.push(cur);
+      return res.map(s=>s.trim());
+    }
+
+    clearStorage.addEventListener('click', ()=>{
+      if(confirm('確定要清空本機資料並還原範例？')){
+        localStorage.removeItem('lottery_data_v1');
+        loadFromStorage();
+      }
+    });
+
+    search.addEventListener('input', ()=> render(search.value));
+
+    toggleModeBtn.addEventListener('click', ()=>{
+      if(!editMode){
+        const pwd = prompt('請輸入編輯模式密碼：');
+        if(pwd !== PASSWORD){
+          alert('密碼錯誤，無法進入編輯模式');
+          return;
+        }
+      }
+      editMode = !editMode;
+      render(search.value);
+    });
+
+    loadFromStorage();
+  </script>
+</body>
+</html>
