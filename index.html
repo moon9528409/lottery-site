@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佳冬鄉珍惜水資源宣導暨中秋晚會活動 抽獎查詢</title>
+
+  <!-- SEO Meta -->
+  <meta name="description" content="佳冬鄉珍惜水資源宣導暨中秋晚會活動抽獎結果快速查詢，方便查看摸彩品、得獎人與備註資訊。">
+  <meta name="keywords" content="佳冬鄉,中秋晚會,抽獎,摸彩,得獎名單,查詢,水資源宣導">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="佳冬鄉中秋晚會抽獎查詢">
+  <meta property="og:description" content="快速查詢佳冬鄉珍惜水資源宣導暨中秋晚會活動的摸彩品與得獎人。">
+  <meta property="og:type" content="website">
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9fafb; margin: 0; padding: 0; }
+    header { background: linear-gradient(90deg,#3b82f6,#06b6d4); color: white; padding: 1rem; text-align: center; font-size: 1.5rem; font-weight: bold; }
+    main { padding: 1rem; max-width: 1000px; margin: auto; }
+    #controls { margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    button.primary { background: #3b82f6; color: white; }
+    button.danger { background: #ef4444; color: white; }
+    button.secondary { background: #e5e7eb; }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: center; }
+    th { background: #f1f5f9; }
+    tr:hover { background: #f9fafb; }
+    .hidden { display: none; }
+    #modeStatus { font-weight: bold; }
+    #errorMsg { color: red; font-weight: bold; margin-left: 10px; }
+  </style>
+</head>
+<body>
+  <header>佳冬鄉珍惜水資源宣導暨中秋晚會活動 抽獎查詢</header>
+  <main>
+    <div id="controls">
+      <input type="text" id="search" placeholder="搜尋摸彩品 / 得獎人 / 備註">
+      <button id="toggleMode" class="primary">目前模式：觀看</button>
+      <span id="errorMsg"></span>
+      <button id="addRow" class="secondary hidden">新增一筆</button>
+      <button id="saveData" class="secondary hidden">儲存到本機</button>
+      <button id="loadData" class="secondary hidden">載入本機資料</button>
+      <input type="file" id="importFile" class="hidden">
+      <button id="importBtn" class="secondary hidden">匯入 CSV</button>
+      <button id="exportBtn" class="secondary hidden">匯出 CSV</button>
+    </div>
+    <table id="lotteryTable">
+      <thead>
+        <tr>
+          <th>摸彩品</th>
+          <th>得獎人</th>
+          <th>備註</th>
+          <th class="editCol hidden">操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <script>
+    const tableBody = document.querySelector("#lotteryTable tbody");
+    const searchInput = document.getElementById("search");
+    const toggleModeBtn = document.getElementById("toggleMode");
+    const errorMsg = document.getElementById("errorMsg");
+    const addRowBtn = document.getElementById("addRow");
+    const saveBtn = document.getElementById("saveData");
+    const loadBtn = document.getElementById("loadData");
+    const importBtn = document.getElementById("importBtn");
+    const importFile = document.getElementById("importFile");
+    const exportBtn = document.getElementById("exportBtn");
+    let editMode = false;
+
+    function addRow(item="", winner="", note="") {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td contenteditable="${editMode}">${item}</td>
+        <td contenteditable="${editMode}">${winner}</td>
+        <td contenteditable="${editMode}">${note}</td>
+        <td class="editCol ${editMode ? "" : "hidden"}">
+          <button class="danger">刪除</button>
+        </td>`;
+      if (editMode) {
+        row.querySelector("button").addEventListener("click", () => row.remove());
+      }
+      tableBody.appendChild(row);
+    }
+
+    function filterTable() {
+      const term = searchInput.value.toLowerCase();
+      tableBody.querySelectorAll("tr").forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(term) ? "" : "none";
+      });
+    }
+
+    searchInput.addEventListener("input", filterTable);
+
+    toggleModeBtn.addEventListener("click", () => {
+      if (!editMode) {
+        const pwd = prompt("請輸入編輯模式密碼：");
+        if (pwd !== "900226") {
+          errorMsg.textContent = "密碼錯誤！";
+          return;
+        } else {
+          errorMsg.textContent = "";
+        }
+      }
+      editMode = !editMode;
+      toggleModeBtn.textContent = "目前模式：" + (editMode ? "編輯" : "觀看");
+      [addRowBtn, saveBtn, loadBtn, importBtn, exportBtn].forEach(btn => btn.classList.toggle("hidden", !editMode));
+      document.querySelectorAll(".editCol").forEach(el => el.classList.toggle("hidden", !editMode));
+      tableBody.querySelectorAll("tr").forEach(row => {
+        row.querySelectorAll("td").forEach((td, i) => {
+          if (i < 3) td.contentEditable = editMode;
+        });
+        const actionCell = row.querySelector("td:last-child");
+        if (actionCell) {
+          actionCell.classList.toggle("hidden", !editMode);
+          if (editMode) {
+            actionCell.innerHTML = '<button class="danger">刪除</button>';
+            actionCell.querySelector("button").addEventListener("click", () => row.remove());
+          } else {
+            actionCell.innerHTML = "";
+          }
+        }
+      });
+    });
+
+    addRowBtn.addEventListener("click", () => addRow());
+
+    saveBtn.addEventListener("click", () => {
+      const data = [];
+      tableBody.querySelectorAll("tr").forEach(row => {
+        const cells = row.querySelectorAll("td");
+        data.push({ item: cells[0].innerText, winner: cells[1].innerText, note: cells[2].innerText });
+      });
+      localStorage.setItem("lotteryData", JSON.stringify(data));
+      alert("已儲存到本機");
+    });
+
+    loadBtn.addEventListener("click", () => {
+      const data = JSON.parse(localStorage.getItem("lotteryData") || "[]");
+      tableBody.innerHTML = "";
+      data.forEach(r => addRow(r.item, r.winner, r.note));
+    });
+
+    importBtn.addEventListener("click", () => importFile.click());
+    importFile.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const lines = evt.target.result.split("\\n").map(l => l.split(","));
+        tableBody.innerHTML = "";
+        lines.forEach(row => { if (row.length >= 2) addRow(row[0], row[1], row[2] || ""); });
+      };
+      reader.readAsText(file);
+    });
+
+    exportBtn.addEventListener("click", () => {
+      const rows = [["摸彩品","得獎人","備註"]];
+      tableBody.querySelectorAll("tr").forEach(row => {
+        const cells = row.querySelectorAll("td");
+        rows.push([cells[0].innerText, cells[1].innerText, cells[2].innerText]);
+      });
+      const csv = rows.map(r => r.join(",")).join("\\n");
+      const blob = new Blob([csv], {type: "text/csv"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "lottery.csv";
+      a.click();
+    });
+  </script>
+</body>
+</html>
