@@ -1,11 +1,8 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>佳冬鄉珍惜水資源宣導暨中秋晚會活動 抽獎查詢</title>
-
-  <!-- SEO Meta -->
   <meta name="description" content="佳冬鄉珍惜水資源宣導暨中秋晚會活動抽獎結果快速查詢，方便查看摸彩品、得獎人與備註資訊。">
   <meta name="keywords" content="佳冬鄉,中秋晚會,抽獎,摸彩,得獎名單,查詢,水資源宣導">
   <meta name="robots" content="index, follow">
@@ -14,163 +11,132 @@
   <meta property="og:type" content="website">
 
   <style>
-    body { font-family: Arial, sans-serif; background: #f9fafb; margin: 0; padding: 0; }
-    header { background: linear-gradient(90deg,#3b82f6,#06b6d4); color: white; padding: 1rem; text-align: center; font-size: 1.5rem; font-weight: bold; }
-    main { padding: 1rem; max-width: 1000px; margin: auto; }
-    #controls { margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    button { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
-    button.primary { background: #3b82f6; color: white; }
-    button.danger { background: #ef4444; color: white; }
-    button.secondary { background: #e5e7eb; }
-    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: center; }
-    th { background: #f1f5f9; }
-    tr:hover { background: #f9fafb; }
-    .hidden { display: none; }
-    #modeStatus { font-weight: bold; }
-    #errorMsg { color: red; font-weight: bold; margin-left: 10px; }
+    body { font-family: "Microsoft JhengHei", sans-serif; background: linear-gradient(135deg, #c9d6ff, #e2e2e2); margin:0; padding:0; color:#333; }
+    header { background: linear-gradient(135deg,#3f51b5,#5c6bc0); color:white; padding:20px; text-align:center; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
+    header h1 { margin:0; font-size:28px; letter-spacing:2px; }
+    .container { max-width:900px; margin:30px auto; padding:20px; }
+    .card { background:white; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s; }
+    .card:hover { transform:translateY(-3px); }
+    h2 { color:#3f51b5; margin-bottom:10px; }
+    table { width:100%; border-collapse: collapse; }
+    th,td { padding:12px; border-bottom:1px solid #ddd; text-align:center; }
+    th { background:#f5f5f5; font-weight:bold; }
+    tr:hover { background:#f9f9f9; }
+    .btn { padding:8px 14px; border:none; border-radius:8px; background:#3f51b5; color:white; cursor:pointer; transition:background 0.3s; margin:5px 0; }
+    .btn:hover { background:#283593; }
+    .hidden { display:none; }
+    #historyList { max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-top:10px; background:#f5f5f5; border-radius:8px; }
+    #historyList div { padding:5px; border-bottom:1px solid #ccc; cursor:pointer; }
+    #historyList div:hover { background:#e0e0e0; }
+    footer { text-align:center; padding:15px; background:#3f51b5; color:white; margin-top:40px; border-top-left-radius:10px; border-top-right-radius:10px; }
   </style>
 </head>
 <body>
-  <header>佳冬鄉珍惜水資源宣導暨中秋晚會活動 抽獎查詢</header>
-  <main>
-    <div id="controls">
-      <input type="text" id="search" placeholder="搜尋摸彩品 / 得獎人 / 備註">
-      <button id="toggleMode" class="primary">目前模式：觀看</button>
-      <span id="errorMsg"></span>
-      <button id="addRow" class="secondary hidden">新增一筆</button>
-      <button id="saveData" class="secondary hidden">儲存到本機</button>
-      <button id="loadData" class="secondary hidden">載入本機資料</button>
-      <input type="file" id="importFile" class="hidden">
-      <button id="importBtn" class="secondary hidden">匯入 CSV</button>
-      <button id="exportBtn" class="secondary hidden">匯出 CSV</button>
-    </div>
+<header><h1>佳冬鄉珍惜水資源宣導暨中秋晚會活動 🎉 抽獎查詢</h1></header>
+
+<div class="container">
+  <div class="card">
+    <h2>抽獎結果</h2>
     <table id="lotteryTable">
       <thead>
-        <tr>
-          <th>摸彩品</th>
-          <th>得獎人</th>
-          <th>備註</th>
-          <th class="editCol hidden">操作</th>
-        </tr>
+        <tr><th>摸彩品</th><th>得獎人</th><th>備註</th></tr>
       </thead>
       <tbody></tbody>
     </table>
-  </main>
+  </div>
 
-  <script>
-    const tableBody = document.querySelector("#lotteryTable tbody");
-    const searchInput = document.getElementById("search");
-    const toggleModeBtn = document.getElementById("toggleMode");
-    const errorMsg = document.getElementById("errorMsg");
-    const addRowBtn = document.getElementById("addRow");
-    const saveBtn = document.getElementById("saveData");
-    const loadBtn = document.getElementById("loadData");
-    const importBtn = document.getElementById("importBtn");
-    const importFile = document.getElementById("importFile");
-    const exportBtn = document.getElementById("exportBtn");
-    let editMode = false;
+  <div class="card hidden" id="editCard">
+    <h2>編輯模式</h2>
+    <button class="btn" onclick="addRow()">新增一筆</button>
+    <button class="btn" onclick="saveData()">儲存更新</button>
+    <button class="btn" onclick="showHistory()">查看歷史紀錄</button>
+    <div id="historyList" class="hidden"></div>
+  </div>
 
-    function addRow(item="", winner="", note="") {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td contenteditable="${editMode}">${item}</td>
-        <td contenteditable="${editMode}">${winner}</td>
-        <td contenteditable="${editMode}">${note}</td>
-        <td class="editCol ${editMode ? "" : "hidden"}">
-          <button class="danger">刪除</button>
-        </td>`;
-      if (editMode) {
-        row.querySelector("button").addEventListener("click", () => row.remove());
-      }
-      tableBody.appendChild(row);
-    }
+  <div style="text-align:center; margin-top:20px;">
+    <button class="btn" onclick="toggleMode()">切換編輯/觀看模式</button>
+  </div>
+</div>
 
-    function filterTable() {
-      const term = searchInput.value.toLowerCase();
-      tableBody.querySelectorAll("tr").forEach(row => {
-        const text = row.innerText.toLowerCase();
-        row.style.display = text.includes(term) ? "" : "none";
-      });
-    }
+<footer>🌕 佳冬鄉中秋晚會活動 | 水資源宣導 🌊</footer>
 
-    searchInput.addEventListener("input", filterTable);
+<script>
+let editMode=false;
+const password="900226";
 
-    toggleModeBtn.addEventListener("click", () => {
-      if (!editMode) {
-        const pwd = prompt("請輸入編輯模式密碼：");
-        if (pwd !== "900226") {
-          errorMsg.textContent = "密碼錯誤！";
-          return;
-        } else {
-          errorMsg.textContent = "";
-        }
-      }
-      editMode = !editMode;
-      toggleModeBtn.textContent = "目前模式：" + (editMode ? "編輯" : "觀看");
-      [addRowBtn, saveBtn, loadBtn, importBtn, exportBtn].forEach(btn => btn.classList.toggle("hidden", !editMode));
-      document.querySelectorAll(".editCol").forEach(el => el.classList.toggle("hidden", !editMode));
-      tableBody.querySelectorAll("tr").forEach(row => {
-        row.querySelectorAll("td").forEach((td, i) => {
-          if (i < 3) td.contentEditable = editMode;
-        });
-        const actionCell = row.querySelector("td:last-child");
-        if (actionCell) {
-          actionCell.classList.toggle("hidden", !editMode);
-          if (editMode) {
-            actionCell.innerHTML = '<button class="danger">刪除</button>';
-            actionCell.querySelector("button").addEventListener("click", () => row.remove());
-          } else {
-            actionCell.innerHTML = "";
-          }
-        }
-      });
-    });
+function toggleMode() {
+  if(!editMode){
+    let input=prompt("請輸入編輯密碼：");
+    if(input===password){
+      editMode=true;
+      document.getElementById("editCard").classList.remove("hidden");
+      makeTableEditable(true);
+    }else{ alert("密碼錯誤！"); return; }
+  } else {
+    editMode=false;
+    document.getElementById("editCard").classList.add("hidden");
+    document.getElementById("historyList").classList.add("hidden");
+    makeTableEditable(false);
+  }
+}
 
-    addRowBtn.addEventListener("click", () => addRow());
+function makeTableEditable(enable){
+  document.querySelectorAll("#lotteryTable td").forEach(td=>{
+    td.contentEditable=enable;
+    td.style.background=enable?"#fffde7":"";
+  });
+}
 
-    saveBtn.addEventListener("click", () => {
-      const data = [];
-      tableBody.querySelectorAll("tr").forEach(row => {
-        const cells = row.querySelectorAll("td");
-        data.push({ item: cells[0].innerText, winner: cells[1].innerText, note: cells[2].innerText });
-      });
-      localStorage.setItem("lotteryData", JSON.stringify(data));
-      alert("已儲存到本機");
-    });
+function addRow(){
+  const tbody=document.querySelector("#lotteryTable tbody");
+  const row=tbody.insertRow();
+  row.insertCell(0).innerText="新獎品";
+  row.insertCell(1).innerText="新得獎人";
+  row.insertCell(2).innerText="";
+}
 
-    loadBtn.addEventListener("click", () => {
-      const data = JSON.parse(localStorage.getItem("lotteryData") || "[]");
-      tableBody.innerHTML = "";
-      data.forEach(r => addRow(r.item, r.winner, r.note));
-    });
+function saveData(){
+  const data=[];
+  document.querySelectorAll("#lotteryTable tbody tr").forEach(tr=>{
+    const cells=tr.querySelectorAll("td");
+    data.push({item:cells[0].innerText, winner:cells[1].innerText, note:cells[2].innerText});
+  });
+  const history=JSON.parse(localStorage.getItem("lotteryHistory")||"[]");
+  history.push({time:new Date().toLocaleString(), data});
+  localStorage.setItem("lotteryHistory", JSON.stringify(history));
+  alert("已儲存並記錄更新！");
+}
 
-    importBtn.addEventListener("click", () => importFile.click());
-    importFile.addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = evt => {
-        const lines = evt.target.result.split("\\n").map(l => l.split(","));
-        tableBody.innerHTML = "";
-        lines.forEach(row => { if (row.length >= 2) addRow(row[0], row[1], row[2] || ""); });
-      };
-      reader.readAsText(file);
-    });
+function showHistory(){
+  const list=document.getElementById("historyList");
+  list.innerHTML="";
+  const history=JSON.parse(localStorage.getItem("lotteryHistory")||"[]");
+  if(history.length===0){ alert("沒有歷史紀錄"); return; }
+  list.classList.remove("hidden");
+  history.slice().reverse().forEach((h,index)=>{
+    const div=document.createElement("div");
+    div.innerText=`${h.time} - ${h.data.length}筆資料`;
+    div.onclick=()=>loadHistory(h);
+    list.appendChild(div);
+  });
+}
 
-    exportBtn.addEventListener("click", () => {
-      const rows = [["摸彩品","得獎人","備註"]];
-      tableBody.querySelectorAll("tr").forEach(row => {
-        const cells = row.querySelectorAll("td");
-        rows.push([cells[0].innerText, cells[1].innerText, cells[2].innerText]);
-      });
-      const csv = rows.map(r => r.join(",")).join("\\n");
-      const blob = new Blob([csv], {type: "text/csv"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "lottery.csv";
-      a.click();
-    });
-  </script>
+function loadHistory(h){
+  const tbody=document.querySelector("#lotteryTable tbody");
+  tbody.innerHTML="";
+  h.data.forEach(r=>{
+    const row=tbody.insertRow();
+    row.insertCell(0).innerText=r.item;
+    row.insertCell(1).innerText=r.winner;
+    row.insertCell(2).innerText=r.note;
+  });
+  alert(`已載入 ${h.time} 的資料`);
+}
+
+window.onload=function(){
+  const history=JSON.parse(localStorage.getItem("lotteryHistory")||"[]");
+  if(history.length>0) loadHistory(history[history.length-1]);
+}
+</script>
 </body>
 </html>
