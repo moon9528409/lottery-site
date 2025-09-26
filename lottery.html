@@ -1,1 +1,139 @@
 
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>佳冬鄉珍惜水資源宣導暨中秋晚會活動 抽獎查詢</title>
+<style>
+body { font-family:"Microsoft JhengHei",sans-serif; background:linear-gradient(135deg,#c9d6ff,#e2e2e2); margin:0; padding:0; color:#333; }
+header { background:linear-gradient(135deg,#3f51b5,#5c6bc0); color:white; padding:20px; text-align:center; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
+header h1 { margin:0; font-size:28px; letter-spacing:2px; }
+.container { max-width:900px; margin:30px auto; padding:20px; }
+.card { background:white; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1); transition:transform 0.2s; }
+.card:hover { transform:translateY(-3px); }
+h2 { color:#3f51b5; margin-bottom:10px; }
+table { width:100%; border-collapse: collapse; }
+th,td { padding:12px; border-bottom:1px solid #ddd; text-align:center; }
+th { background:#f5f5f5; font-weight:bold; }
+tr:hover { background:#f9f9f9; }
+.btn { padding:8px 14px; border:none; border-radius:8px; background:#3f51b5; color:white; cursor:pointer; transition:background 0.3s; margin:5px 0; }
+.btn:hover { background:#283593; }
+.hidden { display:none; }
+#historyList { max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-top:10px; background:#f5f5f5; border-radius:8px; }
+#historyList div { padding:5px; border-bottom:1px solid #ccc; cursor:pointer; }
+#historyList div:hover { background:#e0e0e0; }
+footer { text-align:center; padding:15px; background:#3f51b5; color:white; margin-top:40px; border-top-left-radius:10px; border-top-right-radius:10px; }
+</style>
+</head>
+<body>
+<header><h1>佳冬鄉珍惜水資源宣導暨中秋晚會活動 🎉 抽獎查詢</h1></header>
+
+<div class="container">
+  <div class="card">
+    <h2>抽獎結果</h2>
+    <table id="lotteryTable">
+      <thead>
+        <tr><th>摸彩品</th><th>得獎人</th><th>備註</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card hidden" id="editCard">
+    <h2>編輯模式</h2>
+    <button class="btn" onclick="addRow()">新增一筆</button>
+    <button class="btn" onclick="saveData()">儲存更新</button>
+    <button class="btn" onclick="showHistory()">查看歷史紀錄</button>
+    <div id="historyList" class="hidden"></div>
+  </div>
+
+  <div style="text-align:center; margin-top:20px;">
+    <button class="btn" onclick="toggleMode()">切換編輯/觀看模式</button>
+  </div>
+</div>
+
+<footer>🌕 佳冬鄉中秋晚會活動 | 水資源宣導 🌊</footer>
+
+<script>
+let editMode=false;
+const password="900226";
+
+function toggleMode(){
+  if(!editMode){
+    let input=prompt("請輸入編輯密碼：");
+    if(input===password){
+      editMode=true;
+      document.getElementById("editCard").classList.remove("hidden");
+      makeTableEditable(true);
+    }else{ alert("密碼錯誤！"); return; }
+  } else {
+    editMode=false;
+    document.getElementById("editCard").classList.add("hidden");
+    document.getElementById("historyList").classList.add("hidden");
+    makeTableEditable(false);
+  }
+}
+
+function makeTableEditable(enable){
+  document.querySelectorAll("#lotteryTable td").forEach(td=>{
+    td.contentEditable=enable;
+    td.style.background=enable?"#fffde7":"";
+  });
+}
+
+function addRow(){
+  const tbody=document.querySelector("#lotteryTable tbody");
+  const row=tbody.insertRow();
+  for(let i=0;i<3;i++){
+    let cell=row.insertCell(i);
+    cell.innerText=i===0?"新獎品":i===1?"新得獎人":"";
+    cell.contentEditable=true; // 新增行直接可編輯
+    cell.style.background="#fffde7";
+  }
+}
+
+function saveData(){
+  const data=[];
+  document.querySelectorAll("#lotteryTable tbody tr").forEach(tr=>{
+    const cells=tr.querySelectorAll("td");
+    data.push({item:cells[0].innerText, winner:cells[1].innerText, note:cells[2].innerText});
+  });
+  const history=JSON.parse(localStorage.getItem("lotteryHistory")||"[]");
+  history.push({time:new Date().toLocaleString(), data});
+  localStorage.setItem("lotteryHistory", JSON.stringify(history));
+  alert("已儲存並記錄更新！");
+}
+
+function showHistory(){
+  const list=document.getElementById("historyList");
+  list.innerHTML="";
+  const history=JSON.parse(localStorage.getItem("lotteryHistory")||"[]");
+  if(history.length===0){ alert("沒有歷史紀錄"); return; }
+  list.classList.remove("hidden");
+  history.slice().reverse().forEach(h=>{
+    const div=document.createElement("div");
+    div.innerText=`${h.time} - ${h.data.length}筆資料`;
+    div.onclick=()=>loadHistory(h);
+    list.appendChild(div);
+  });
+}
+
+function loadHistory(h){
+  const tbody=document.querySelector("#lotteryTable tbody");
+  tbody.innerHTML="";
+  h.data.forEach(r=>{
+    const row=tbody.insertRow();
+    row.insertCell(0).innerText=r.item;
+    row.insertCell(1).innerText=r.winner;
+    row.insertCell(2).innerText=r.note;
+  });
+  alert(`已載入 ${h.time} 的資料`);
+}
+
+window.onload=function(){
+  const history=JSON.parse(localStorage.getItem("lotteryHistory")||"[]");
+  if(history.length>0) loadHistory(history[history.length-1]);
+}
+</script>
+</body>
+</html>
