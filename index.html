@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>佳冬鄉珍惜水資源宣導暨中秋晚會活動 抽獎查詢</title>
+<style>
+body { font-family:"Microsoft JhengHei",sans-serif; background:linear-gradient(135deg,#c9d6ff,#e2e2e2); margin:0; padding:0; color:#333; }
+header { background:linear-gradient(135deg,#3f51b5,#5c6bc0); color:white; padding:20px; text-align:center; box-shadow:0 4px 8px rgba(0,0,0,0.2); }
+header h1 { margin:0; font-size:28px; letter-spacing:2px; }
+.container { max-width:900px; margin:30px auto; padding:20px; }
+.card { background:white; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.1); transition:transform 0.2s; }
+.card:hover { transform:translateY(-3px); }
+h2 { color:#3f51b5; margin-bottom:10px; }
+table { width:100%; border-collapse: collapse; }
+th,td { padding:12px; border-bottom:1px solid #ddd; text-align:center; }
+th { background:#f5f5f5; font-weight:bold; }
+tr:hover { background:#f9f9f9; }
+.btn { padding:8px 14px; border:none; border-radius:8px; background:#3f51b5; color:white; cursor:pointer; transition:background 0.3s; margin:5px 0; }
+.btn:hover { background:#283593; }
+.hidden { display:none; }
+#historyList { max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-top:10px; background:#f5f5f5; border-radius:8px; }
+#historyList div { padding:5px; border-bottom:1px solid #ccc; cursor:pointer; }
+#historyList div:hover { background:#e0e0e0; }
+#searchBox { width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:8px; }
+footer { text-align:center; padding:15px; background:#3f51b5; color:white; margin-top:40px; border-top-left-radius:10px; border-top-right-radius:10px; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+<header><h1>佳冬鄉珍惜水資源宣導暨中秋晚會活動 🎉 抽獎查詢</h1></header>
+
+<div class="container">
+  <div class="card">
+    <h2>抽獎結果</h2>
+    <input type="text" id="searchBox" placeholder="🔍 搜尋獎品或得獎人..." onkeyup="searchTable()">
+    <table id="lotteryTable">
+      <thead>
+        <tr><th>摸彩品</th><th>得獎人</th><th>備註</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card hidden" id="editCard">
+    <h2>編輯模式</h2>
+    <button class="btn" onclick="addRow()">新增一筆</button>
+    <button class="btn" onclick="saveData()">儲存更新</button>
+    <button class="btn" onclick="showHistory()">查看歷史紀錄</button>
+    <div id="historyList" class="hidden"></div>
+  </div>
+
+  <div style="text-align:center; margin-top:20px;">
+    <button class="btn" onclick="toggleMode()">切換編輯/觀看模式</button>
+  </div>
+</div>
+
+<footer>🌕 佳冬鄉中秋晚會活動 | 水資源宣導 🌊</footer>
+
+<script>
+// Firebase 設定
+const firebaseConfig = {
+  apiKey: "AIzaSyCTLCfy-ZXDHf-0yJJNVY9ySC6js77VvEI",
+  authDomain: "lottery-737ad.firebaseapp.com",
+  databaseURL: "https://lottery-737ad-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "lottery-737ad",
+  storageBucket: "lottery-737ad.firebasestorage.app",
+  messagingSenderId: "359372602155",
+  appId: "1:359372602155:web:ffc53d2494a3cb89a6236e",
+  measurementId: "G-L73KVZTMVT"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let editMode=false;
+const password="900226";
+
+function toggleMode(){
+  if(!editMode){
+    let input=prompt("請輸入編輯密碼：");
+    if(input===password){
+      editMode=true;
+      document.getElementById("editCard").classList.remove("hidden");
+      makeTableEditable(true);
+    }else{ alert("密碼錯誤！"); return; }
+  } else {
+    editMode=false;
+    document.getElementById("editCard").classList.add("hidden");
+    document.getElementById("historyList").classList.add("hidden");
+    makeTableEditable(false);
+  }
+}
+
+function makeTableEditable(enable){
+  document.querySelectorAll("#lotteryTable td").forEach(td=>{
+    td.contentEditable=enable;
+    td.style.background=enable?"#fffde7":"";
+  });
+}
+
+function addRow(){
+  const tbody=document.querySelector("#lotteryTable tbody");
+  const row=tbody.insertRow();
+  for(let i=0;i<3;i++){
+    let cell=row.insertCell(i);
+    cell.innerText=i===0?"新獎品":i===1?"新得獎人":"";
+    cell.contentEditable=true;
+    cell.style.background="#fffde7";
+  }
+}
+
+function saveData(){
+  const data=[];
+  document.querySelectorAll("#lotteryTable tbody tr").forEach(tr=>{
+    const cells=tr.querySelectorAll("td");
+    data.push({item:cells[0].innerText, winner:cells[1].innerText, note:cells[2].innerText});
+  });
+  db.ref("lotteryData").set(data);
+  alert("已儲存並同步到 Firebase！");
+}
+
+function showHistory(){
+  const list=document.getElementById("historyList");
+  list.innerHTML="";
+  alert("目前版本已經改用 Firebase，不再使用本地歷史紀錄。");
+}
+
+function loadData(snapshot){
+  const tbody=document.querySelector("#lotteryTable tbody");
+  tbody.innerHTML="";
+  snapshot.forEach(r=>{
+    const row=tbody.insertRow();
+    row.insertCell(0).innerText=r.val().item;
+    row.insertCell(1).innerText=r.val().winner;
+    row.insertCell(2).innerText=r.val().note;
+  });
+}
+
+// 搜尋功能
+function searchTable(){
+  const filter=document.getElementById("searchBox").value.toLowerCase();
+  const rows=document.querySelectorAll("#lotteryTable tbody tr");
+  rows.forEach(row=>{
+    const text=row.innerText.toLowerCase();
+    row.style.display=text.includes(filter)?"":"none";
+  });
+}
+
+db.ref("lotteryData").on("value",snapshot=>{
+  loadData(snapshot);
+});
+</script>
+</body>
+</html>
