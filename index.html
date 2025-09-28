@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>佳冬鄉珍惜水資源宣導暨中秋晚會活動 🎉 抽獎查詢</title>
+<style>
+  body{font-family:"Microsoft JhengHei",sans-serif;margin:0;background:linear-gradient(135deg,#c9d6ff,#e2e2e2);color:#222}
+  header{background:linear-gradient(135deg,#3f51b5,#5c6bc0);color:#fff;padding:16px;text-align:center}
+  .container{max-width:980px;margin:20px auto;padding:16px}
+  .warningBox{
+    background:#fff;
+    color:#d32f2f;
+    border:2px solid #d32f2f;
+    border-radius:8px;
+    padding:10px;
+    font-weight:bold;
+    text-align:center;
+    margin:16px 0;
+  }
+  .card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-bottom:16px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #eee;text-align:center}
+  th{background:#f5f7ff;color:#263238}
+  .btn{padding:8px 12px;border-radius:8px;border:0;background:#3f51b5;color:#fff;cursor:pointer;margin:4px}
+  .search{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+  .search input{padding:8px;border-radius:8px;border:1px solid #ddd;width:60%}
+  #historyList{max-height:240px;overflow:auto;border:1px solid #eee;padding:6px;border-radius:6px;background:#fafafa}
+  .hidden{display:none}
+  .highlight{background:#fff9c4}
+  @media(max-width:640px){ .search input{width:100%} th,td{font-size:14px;padding:8px} }
+</style>
+</head>
+<body>
+<header><h1>佳冬鄉珍惜水資源宣導暨中秋晚會活動 🎉 抽獎查詢</h1></header>
+
+<div class="container">
+  <div class="warningBox">
+    查詢開放時間：9/28 17:00 至 23:30<br>
+    獎項需於晚會活動期間領取，活動結束後不補領
+  </div>
+
+  <div class="card">
+    <div class="search">
+      <input id="searchInput" placeholder="搜尋：中獎號碼 / 摸彩品 / 得獎人 / 電話，按 Enter 搜尋" onkeydown="if(event.key==='Enter') searchItems()">
+      <button class="btn" onclick="searchItems()">搜尋</button>
+      <button class="btn" onclick="clearSearch()">清除</button>
+      <button class="btn" onclick="manualRefresh()">重新載入</button>
+    </div>
+    <div id="searchCount" style="text-align:center;color:#555;margin-bottom:8px"></div>
+
+    <table id="lotteryTable">
+      <thead>
+        <tr><th>中獎號碼</th><th>摸彩品</th><th>得獎人</th><th>電話</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<footer style="text-align:center;padding:12px;background:#3f51b5;color:#fff;">🌕 佳冬鄉中秋晚會活動 | 水資源宣導 🌊</footer>
+
+</body>
+</html>
